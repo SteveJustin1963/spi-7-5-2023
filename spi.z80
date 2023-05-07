@@ -1,0 +1,42 @@
+SPDR equ 0x01 ; Replace with the actual address of the SPI data register
+SPSR equ 0x02 ; Replace with the actual address of the SPI status register
+SPCR equ 0x03 ; Replace with the actual address of the SPI control register
+
+; SPI Transfer function to send and receive SPI data
+spi_transfer:
+    push af          ; Save AF register pair
+    push hl          ; Save HL register pair
+    ld hl, 4         ; Add 4 to the value of SP (2 bytes for AF, 2 bytes for HL)
+    add hl, sp       ; Get the address of the input byte
+    ld a, (hl)       ; Load the input byte
+    ld (SPDR), a     ; Load the data to be sent into the SPI data register
+
+wait_loop:
+    in a, (SPSR)     ; Read the SPI status register
+    bit 7, a         ; Check if SPIF flag is set
+    jr z, wait_loop  ; If not set, loop back and check again
+
+    ld a, (SPDR)     ; Read the received data from the SPI data register
+    pop hl           ; Restore HL register pair
+    pop af           ; Restore AF register pair
+    ret
+
+; SPI set data mode function to set the SPI data mode
+spi_set_data_mode:
+    push af          ; Save AF register pair
+    ld hl, 2         ; Add 2 to the value of SP (2 bytes for AF)
+    add hl, sp       ; Get the address of the data mode parameter
+    ld a, (hl)       ; Load the data mode value
+    out (SPCR), a    ; Set the SPI data mode
+    pop af           ; Restore AF register pair
+    ret
+
+; SPI set clock divider function to set the SPI clock divider
+spi_set_clock_divider:
+    push af          ; Save AF register pair
+    ld hl, 2         ; Add 2 to the value of SP (2 bytes for AF)
+    add hl, sp       ; Get the address of the clock divider parameter
+    ld a, (hl)       ; Load the clock divider value
+    out (SPCR), a    ; Set the SPI clock divider
+    pop af           ; Restore AF register pair
+    ret
